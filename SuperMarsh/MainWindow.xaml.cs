@@ -24,20 +24,29 @@ namespace SuperMarsh {
         private DispatcherTimer timer;
         private MarchViewModel viewModel;
         private bool extend = false;
+        private bool moveLock = false;
+        private int originalHeight = 1000;
+        private int originalWidth = 300;
+        private int changeHeight = 1000;
+        private int changeWidth = 300;
         public MainWindow()
         {
             InitializeComponent();
             viewModel = new MarchViewModel();
             this.DataContext = viewModel;
-            this.Width = 545;
+            this.Width = originalWidth;
+            this.Height = originalHeight;
             extend = false;
+            moveLock = false;
             extendButton.Content = ">";
+            lockButton.Content = "lock";
         }
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-
-            this.DragMove();
+            if (!moveLock) {
+                this.DragMove();
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -61,12 +70,14 @@ namespace SuperMarsh {
         {
             if (extend)
             {
-                this.Width = 545;
+                this.Width = changeWidth;
+                this.Height = changeHeight;
                 extend = false;
                 extendButton.Content = ">";
             }
             else {
-                this.Width = 1000;
+                this.Width = originalWidth;
+                this.Height = originalHeight;
                 extend = true;
                 extendButton.Content = "<";
             }
@@ -76,6 +87,19 @@ namespace SuperMarsh {
         {
             SingleInstanceHelper.Instance.MarshRuler.StopMarsh();
             timer.Stop();
+        }
+
+        private void lockButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (moveLock)
+            {
+                moveLock = false;
+                lockButton.Content = "lock";
+            }
+            else {
+                moveLock = true;
+                lockButton.Content = "unlock";
+            }
         }
     }
 }

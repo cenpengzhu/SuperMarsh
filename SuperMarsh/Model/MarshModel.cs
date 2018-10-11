@@ -234,7 +234,7 @@ namespace SuperMarsh.Model {
                     UserRecordList.Add(tempUserRecord);
                 }
                 foreach (var eachUserRecord in UserRecordList) {
-                    eachUserRecord.UserGetWeight += (TotalPower / 100000 * 0.5) / AllUserTotalPower * eachUserRecord.UserTotalPower;
+                    eachUserRecord.UserGetWeight += (TotalPower / 10000 * 0.5) / AllUserTotalPower * eachUserRecord.UserTotalPower;
                     if (eachUserRecord.UserId == WinnerId) {
                         eachUserRecord.UserGetWeight += WinnerWeight;
                     }
@@ -264,7 +264,7 @@ namespace SuperMarsh.Model {
             else {
                 LeftTime += 10;
             }
-            TotalWeight += Power / 100000 * 0.5;
+            TotalWeight += Power / 10000 * 0.5;
             CurrentRunner = RunnerName;
             CurrentRunnerPower = Power;
             TotalPower += Power;

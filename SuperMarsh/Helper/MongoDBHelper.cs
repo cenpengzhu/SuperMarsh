@@ -11,7 +11,7 @@ namespace SuperMarsh.Helper {
         public MongoDBHelper() {
         }
 
-        public String DBName = "LiveDB";
+        public String DBName = "TestLiveDB";
 
         private MongoClient client;
         public MongoClient Client {

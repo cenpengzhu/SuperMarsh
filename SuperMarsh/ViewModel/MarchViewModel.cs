@@ -32,7 +32,7 @@ namespace SuperMarsh.ViewModel {
         //private double currentPool;
         public String CurrentPoolWeight {
             get {
-                return SingleInstanceHelper.Instance.MarshRuler.CurrentMarsh.TotalWeight + "千克";
+                return SingleInstanceHelper.Instance.MarshRuler.CurrentMarsh.TotalWeight.ToString("f5") + "千克";
             }
         }
 
@@ -93,6 +93,12 @@ namespace SuperMarsh.ViewModel {
             }
         }
 
+        public String PekingTime {
+            get {
+                return System.DateTime.Now.ToString();
+            }
+        }
+
         public void UpdateStatus() {
             OnPropertyChanged("LeftSeconds");
             OnPropertyChanged("LeftMins");
@@ -100,6 +106,7 @@ namespace SuperMarsh.ViewModel {
             OnPropertyChanged("CurrentPoolWeight");
             OnPropertyChanged("CurrentRunner");
             OnPropertyChanged("UserRecordList");
+            OnPropertyChanged("PekingTime");
         }
 
     }
