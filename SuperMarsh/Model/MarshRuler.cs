@@ -14,6 +14,19 @@ using System.Threading.Tasks;
 namespace SuperMarsh.Model {
     public class MarshRuler {
         public MarshRuler() {
+            NewRunnerMessages = new List<string>();
+            NewRunnerMessages.Add("挑战者表示不服，毅然踏进沼泽，是个恶人没错了！");
+            NewRunnerMessages.Add("快来人啊，挑战者掉进沼泽里了！(假装呼救，其实希望挑战者淹死)");
+            NewRunnerMessages.Add("挑战者踩着前人的头爬上来了，看来挑战者非常懂得沼泽逃生的技巧！");
+            NewRunnerMessages.Add("哦，我的天呐，这黏糊糊的感觉如何？也许你们该采访一下挑战者！");
+            NewRunnerMessages.Add("我希望挑战者在踏进沼泽之前吃了顿好的，因为...他可能再也吃不到了，哈哈哈哈！");
+            NewRunnerMessages.Add("挑战者，你爸妈没有告诉过你要远离沼泽吗？");
+            NewRunnerMessages.Add("生还是死？对于挑战者来说这恐怕不是一个选择，因为他已经死了。");
+            NewRunnerMessages.Add("现在挑战者要给大家表演沼泽炖自己！快送个辣条支持一下8！");
+            NewRunnerMessages.Add("哦，挑战者你落沼的姿势可不怎么样。");
+            NewRunnerMessages.Add("还有谁？难道就这样眼睁睁地看着挑战者窃取你们的果实吗？");
+            NewRunnerMessages.Add("挑战者，你往里挤一哈，后面还有人排队呢！");
+            BoomMessage = "哦天呐！沼泽里的沼气爆炸了，那些黏糊糊的东西搞得挑战者浑身都是！";
         }
         //所有沼泽轮数记录
         private List<MarshModel> allMarshs;
@@ -26,24 +39,41 @@ namespace SuperMarsh.Model {
             }
         }
 
+        private static readonly object MarshLock = new object();
+        private String Name = "沼泽管理员";
+        private static readonly object WriteFileLock = new object();
 
+
+        //当前竞猜
+        public BetModel CurrentBet;
+
+
+        //沼气爆炸消息
+        public String BoomMessage;
+        //沼泽消息
+        public List<String> NewRunnerMessages;
         //正在进行的沼泽
         public MarshModel CurrentMarsh {
             get {
-                if (AllMarshs.Count == 0) {
-                    LoadFromDB();
-                }
-                MarshModel temp = AllMarshs.Find(x => x.MarshNo == AllMarshs.Max(y => y.MarshNo));
-                if (temp.IsWin())
-                {
-                    temp.WinMarsh();
-                    DumpToDB();
-                    var tempNextMarsh = temp.NextMarsh();
-                    AllMarshs.Add(tempNextMarsh);
-                    return tempNextMarsh;
-                }
-                else {
-                    return temp;
+                lock (MarshLock) {
+                    if (AllMarshs.Count == 0)
+                    {
+                        LoadFromDB();
+                    }
+                    MarshModel temp = AllMarshs.Find(x => x.MarshNo == AllMarshs.Max(y => y.MarshNo));
+                    if (temp.IsWin())
+                    {
+                        temp.WinMarsh();
+                        String WinnerMessage = "恭喜" + temp.Winner + "成功逃离沼泽！赢得了" + String.Format("{0:F}", temp.WinnerWeight) + "千克尸体！";
+                        WriteToFile(WinnerMessage);
+                        DumpToDB();
+                        var tempNextMarsh = temp.NextMarsh();
+                        AllMarshs.Add(tempNextMarsh);
+                        return tempNextMarsh;
+                    }
+                    else {
+                        return temp;
+                    }
                 }
             }
         }
@@ -134,9 +164,6 @@ namespace SuperMarsh.Model {
         }
         //接受到弹幕
         public void ReceiveDanmu(object sender, ReceivedDanmakuArgs e) {
-            if (Stop) {
-                return;
-            }
             if (e.Danmaku != null && (e.Danmaku.MsgType == MsgTypeEnum.GiftSend || e.Danmaku.MsgType == MsgTypeEnum.GuardBuy)) {
                 if (e.Danmaku.GiftCount > 0) {
                     //记录礼物价值
@@ -169,6 +196,7 @@ namespace SuperMarsh.Model {
                     {
                         tempUserRecord.FromBson(result[0]);
                         tempUserRecord.UserTotalPower += Power;
+                        tempUserRecord.UserName = e.Danmaku.UserName;
                         if (addFollow == 0)
                         {
                             tempUserRecord.IsFan = false;
@@ -193,8 +221,44 @@ namespace SuperMarsh.Model {
                     var TempBson = BsonSerializer.Deserialize<BsonDocument>(JsonHelper.getJsonByObject(tempUserRecord));
                     SingleInstanceHelper.Instance.DBHelper.Save(SingleInstanceHelper.Instance.DBHelper.UserRecordCoName, TempBson, "UserId");
 
-                    CurrentMarsh.GetOneRunner(e.Danmaku.UserName, Power,e.Danmaku.UserID,addFollow);
+                    if (Stop)
+                    {
+                        return;
+                    }
+
+                    //记录消息
+                    Random rd = new Random();
+                    int rdResult = rd.Next(1, 100);
+                    if (rdResult < 50) {
+                        String NewRunnerMessage = NewRunnerMessages[rdResult % 11].Replace("挑战者", e.Danmaku.UserName);
+                        WriteToFile(NewRunnerMessage);
+                    }
+                    //沼泽处理
+                    if (CurrentMarsh.GetOneRunner(e.Danmaku.UserName, Power, e.Danmaku.UserID, addFollow) == 2) {
+                        String RealBoomMessage = BoomMessage.Replace("挑战者", e.Danmaku.UserName);
+                        WriteToFile(RealBoomMessage);
+                    }
+                    //竞猜处理
+                    if (CurrentBet != null) {
+                        if (CurrentBet.Status == BetStatus.betting) {
+                            CurrentBet.Bet(e.Danmaku.UserName, e.Danmaku.UserID, e.Danmaku.GiftCount, tempGiftValue.GiftPrice);
+                        }
+                    }
                 }
+            }
+        }
+
+        public void WriteToFile(String content) {
+            lock(WriteFileLock) {
+                FileStream fs = new FileStream("F:\\MarshMessage.txt", FileMode.Create);
+                StreamWriter sw = new StreamWriter(fs);
+                //开始写入
+                sw.Write(content);
+                //清空缓冲区
+                sw.Flush();
+                //关闭流
+                sw.Close();
+                fs.Close();
             }
         }
     }

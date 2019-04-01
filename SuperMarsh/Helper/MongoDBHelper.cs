@@ -36,6 +36,8 @@ namespace SuperMarsh.Helper {
         public String GiftValueCoName = "giftvalue";
         public String MarshRecordCoName = "marshrecord";
         public String UserRecordCoName = "userrecord";
+        public String UserWeightChangeRecordCoName = "userweightchangerecord";
+        public String BetRecordCoName = "betrecord";
 
         private void ConnectDB() {
             String url = "mongodb://127.0.0.1:27017";

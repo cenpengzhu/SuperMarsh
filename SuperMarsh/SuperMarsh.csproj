@@ -91,11 +91,14 @@
     <Compile Include="Helper\MongoDBHelper.cs" />
     <Compile Include="Helper\SingleInstanceHelper.cs" />
     <Compile Include="Helper\TimeHelper.cs" />
+    <Compile Include="Helper\UserGetWeightWaterRecordHelper.cs" />
+    <Compile Include="Model\BetModel.cs" />
     <Compile Include="Model\DanmuLoader.cs" />
     <Compile Include="Model\GiftValueModel.cs" />
     <Compile Include="Model\MarshModel.cs" />
     <Compile Include="Model\MarshRuler.cs" />
     <Compile Include="Model\UserRecordModel.cs" />
+    <Compile Include="Model\UserWeightChangeRecordModel.cs" />
     <Compile Include="Utils\utils.cs" />
     <Compile Include="ViewModel\MarchViewModel.cs" />
     <Page Include="MainWindow.xaml">

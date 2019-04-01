@@ -5,13 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SuperMarsh" AllowsTransparency="True" Background="Transparent" 
         mc:Ignorable="d"  WindowStyle="None"  MouseLeftButtonDown="Window_MouseLeftButtonDown" 
-        Title="超级沼泽" Height="1000" Width="300" Loaded="Window_Loaded"> 
+        Title="超级沼泽" Height="800" Width="800" Loaded="Window_Loaded"> 
     <Grid  Width="{Binding Width, ElementName=w}" Height="{Binding Height, ElementName=w}">
-        <Border CornerRadius="5" Margin="10" BorderThickness="2" BorderBrush="White" Opacity="0.1">
+        <Border CornerRadius="5" Margin="10" BorderThickness="2" BorderBrush="#414141" Opacity="1">
             <Border.Effect>
-                <DropShadowEffect ShadowDepth="0" Color="#FF414141" BlurRadius="8"/>
+                <DropShadowEffect ShadowDepth="0" Color="White" BlurRadius="8"/>
             </Border.Effect>
-            <Border Background="Black" Opacity="0.5" Margin="0" CornerRadius="5"/>
+            <Border Background="White" Opacity="1" Margin="0" CornerRadius="5"/>
         </Border>
         <Grid >
             <Grid.ColumnDefinitions>
@@ -19,20 +19,23 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="1*"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="2*"/>
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
-            <Grid Grid.Column="0"  Height="1000" Width="300" VerticalAlignment="Top" HorizontalAlignment="Left" >
+            <TextBlock Text="{Binding Path=MarshNo}"  Height="30" VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="Red" FontSize="18" Margin="0 15 0 0"/>
+            <Grid Grid.Column="0" Grid.Row="1" Height="1000" Width="300" VerticalAlignment="Top" HorizontalAlignment="Left" >
                 <Button x:Name="extendButton" Visibility="Collapsed" Width="300" Height="10" VerticalAlignment="Center" HorizontalAlignment="Right" Content="》" Style="{StaticResource FlatButtonStyle}" Click="Button_Click"/>
                 <Grid >
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="110"/>
-                        <RowDefinition Height="110"/>
-                        <RowDefinition Height="110"/>
-                        <RowDefinition Height="110"/>
+                        <RowDefinition Height="100"/>
+                        <RowDefinition Height="100"/>
+                        <RowDefinition Height="100"/>
+                        <RowDefinition Height="100"/>
+                        <RowDefinition Height="100"/>
                     </Grid.RowDefinitions>
                     <Grid>
-                        <TextBlock Text="逃出倒计时:" Width="100" Height="30" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="Red" FontSize="18" Margin="28 15 0 0"/>
+                        <TextBlock Text="逃出倒计时:" Width="100" Height="30" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="Red" FontSize="18" Margin="28 0 0 0"/>
                         <Grid Grid.Row="0" Margin="0 10 0 0" Width="300" Height="100"   VerticalAlignment="Top"  Background="Transparent">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="1.5*"/>
@@ -70,7 +73,7 @@
                             <RowDefinition Height="1*"/>
                             <RowDefinition Height="3*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Foreground="Red" Margin="28 0 0 0" Text="正在逃离：" HorizontalAlignment="Left"  VerticalAlignment="Center" FontSize="18"/>
+                        <TextBlock Foreground="Red" Margin="28 0 0 0" Text="{Binding Path=RunTimes}" HorizontalAlignment="Left"  VerticalAlignment="Center" FontSize="18"/>
                         <TextBlock Foreground="Red" Text="{Binding Path=CurrentRunner}" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" FontSize="25" HorizontalAlignment="Center"/>
                     </Grid>
                     <Grid Grid.Row="3">
@@ -81,9 +84,17 @@
                         <TextBlock Foreground="Red" Margin="28 0 0 0" Text="系统时间:" HorizontalAlignment="Left"  VerticalAlignment="Center" FontSize="18"/>
                         <TextBlock Foreground="Red" Text="{Binding Path=PekingTime}" Grid.Row="1" VerticalAlignment="Center" FontSize="25" HorizontalAlignment="Center"/>
                     </Grid>
+                    <Grid Grid.Row="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="3*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Foreground="Red" Margin="28 0 0 0" Text="沼气爆炸几率:" HorizontalAlignment="Left"  VerticalAlignment="Center" FontSize="18"/>
+                        <TextBlock Foreground="Red" Text="{Binding Path=BoomPercent}" Grid.Row="1" VerticalAlignment="Center" FontSize="25" HorizontalAlignment="Center"/>
+                    </Grid>
                 </Grid>
             </Grid>
-            <Grid Grid.Column="0" Grid.Row="1">
+            <Grid Grid.Column="0" Grid.Row="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="2*"/>
                     <RowDefinition Height="1*"/>
@@ -91,7 +102,43 @@
                 </Grid.RowDefinitions>
                 <ListView Width="250" Grid.Column="0" Margin="0 15 0 15" FontSize="20" Background="#00FFFFFF" Foreground="Red" ItemsSource="{Binding Path=UserRecordList}" ItemContainerStyle="{StaticResource ListViewItemStyle}">
                 </ListView>
-                <Button Margin="0 0 15 15" Height="150" Content="停止" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="1" Click="Button_Click_1"/>
+                <Button Margin="0 0 15 15" Height="60" Content="停止" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="1" Click="Button_Click_1"/>
+            </Grid>
+            <Grid Grid.Column="1" Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="100"/>
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Height="100">
+                    <TextBlock Text="修改沼泽尸体" Height="30" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="Red" FontSize="18"/>
+                    <TextBox Height="50" Width="100" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="150 0 0 0"/>
+                    <Button  Style="{StaticResource FlatButtonStyle}" Foreground="Red" Content="确认" Height="50" Width="100" Margin="300 0 0 0"/>
+                </Grid>
+                <Grid  Grid.Row="1">
+                    
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="270"/>
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Name="BetNo"/>
+                    <StackPanel Height="50" Width="400" VerticalAlignment="Top" Grid.Row="0" Orientation="Horizontal">
+                        <TextBlock Foreground="Red" Text="竞猜信息" VerticalAlignment="Center"/>
+                        <TextBox Margin="10" Height="30" Width="300" VerticalAlignment="Top" Grid.Row="0" Name="BetMessage" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Height="50" Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="0" >
+                        <TextBlock Foreground="Red" VerticalAlignment="Center" Text="单数"/>
+                        <TextBox Margin="10" Height="30" Width="80" Name="SingularMessage"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Height="50" Width="140" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Row="0" >
+                        <TextBlock Foreground="Red" VerticalAlignment="Center" Text="双数"/>
+                        <TextBox Margin="10" Height="30" Width="80" VerticalAlignment="Center"   Name="DualMessage"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Height="100">
+                        <RadioButton Name="SingularWinCheck" Foreground="Red" Margin="15" VerticalAlignment="Center">单数获胜</RadioButton>
+                        <RadioButton Name="DualWinCheck" Foreground="Red" Margin="300 0 0 0" VerticalAlignment="Center">双数获胜</RadioButton>
+                    </StackPanel>
+                    <Button  Content="{Binding BetButtonText}" Margin="10" Foreground="Red" Style="{DynamicResource FlatButtonStyle}" Grid.Row="1" Click="Button_Click_2"/>
+                </Grid>
             </Grid>
         </Grid>
     </Grid>

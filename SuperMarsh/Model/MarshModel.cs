@@ -23,6 +23,8 @@ namespace SuperMarsh.Model {
             WinnerWeight = Content["WinnerWeight"].ToDouble();
             WinnerId = Content["WinnerId"].ToInt32();
             CurrentRunnerId = Content["CurrentRunnerId"].ToInt32();
+            RunTimes = Content["RunTimes"].ToInt32();
+            LastRunnerLeftTime = Content["LastRunnerLeftTime"].ToInt64();
         }
         //沼泽轮数
         private int marshNo;
@@ -63,7 +65,7 @@ namespace SuperMarsh.Model {
                 return TotalTime - CurrentTime + StartTime;
             }
             set {
-                if (value > 3600 || value < 0)
+                if (value > 1800 || value < 0)
                 {
                     return;
                 }
@@ -87,14 +89,14 @@ namespace SuperMarsh.Model {
         }
 
         //沼泽尸体总重
-        private double totalWeight; 
+        private double totalWeight;
         public double TotalWeight {
             get {
                 return totalWeight;
             }
             set {
                 if (value != totalWeight) {
-                     totalWeight = value;
+                    totalWeight = value;
                 }
             }
         }
@@ -205,6 +207,79 @@ namespace SuperMarsh.Model {
             }
         }
 
+        //沼泽沼底巨兽ID
+        private int monsterId = 0;
+        public int MonsterId {
+            get {
+                return monsterId;
+            }
+            set {
+                if (monsterId != value) {
+                    monsterId = value;
+                }
+            }
+        }
+
+        //沼泽沼底巨兽名字
+        private String monsterName = "无";
+        public String MonsterName {
+            get {
+                return monsterName;
+            }
+            set {
+                if (monsterName != value) {
+                    monsterName = value;
+                }
+            }
+        }
+
+        //总共挑战次数
+        private int runTimes;
+        public int RunTimes {
+            get {
+                return runTimes;
+            }
+            set {
+                if (runTimes != value) {
+                    runTimes = value;
+                }
+            }
+        }
+
+
+        //上次挑战者剩余时间
+        private long lastRunnerLeftTime;
+        public long LastRunnerLeftTime {
+            get {
+                return lastRunnerLeftTime;
+            }
+            set {
+                if (lastRunnerLeftTime != value) {
+                     lastRunnerLeftTime = value;
+                }
+            }
+        }
+
+        //沼气爆炸几率(百分之)
+        public int BoomPercent {
+            get {
+                if ((LastRunnerLeftTime - LeftTime) > 20)
+                {
+                    int temp = (int)(LastRunnerLeftTime - LeftTime - 20) / 4;
+                    if (temp > 100)
+                    {
+                        return 100;
+                    }
+                    else {
+                        return temp;
+                    }
+                }
+                else {
+                    return 0;
+                }
+            }
+        }
+
         //沼泽是否逃离成功
         public bool IsWin() {
             if (LeftTime > 0)
@@ -235,8 +310,11 @@ namespace SuperMarsh.Model {
                 }
                 foreach (var eachUserRecord in UserRecordList) {
                     eachUserRecord.UserGetWeight += (TotalPower / 10000 * 0.5) / AllUserTotalPower * eachUserRecord.UserTotalPower;
+                    //记录尸体流水
+                    UserGetWeightWaterRecordHelper.WaterRecord(eachUserRecord.UserName, eachUserRecord.UserId, (TotalPower / 10000 * 0.5) / AllUserTotalPower * eachUserRecord.UserTotalPower, "增加", "沼泽分红");
                     if (eachUserRecord.UserId == WinnerId) {
                         eachUserRecord.UserGetWeight += WinnerWeight;
+                        UserGetWeightWaterRecordHelper.WaterRecord(eachUserRecord.UserName, eachUserRecord.UserId, WinnerWeight, "增加", "沼泽获胜");
                     }
                     var TempBson = BsonSerializer.Deserialize<BsonDocument>(JsonHelper.getJsonByObject(eachUserRecord));
                     SingleInstanceHelper.Instance.DBHelper.Save(SingleInstanceHelper.Instance.DBHelper.UserRecordCoName, TempBson, "UserId");
@@ -252,23 +330,57 @@ namespace SuperMarsh.Model {
 
         }
         //有新的挑战者 Power为瓜子数量
-        public bool GetOneRunner(String RunnerName,double Power,int UserId,int addFollow)
+        public int GetOneRunner(String RunnerName, double Power, int UserId, int addFollow)
         {
             if (IsWin()) {
-                return false;
+                return 0;
             }
-           if (LeftTime + 10 > 3600)
+            RunTimes += 1;
+
+            //正常结束返回1
+            int result = 1;
+
+            if (BoomPercent > 0) {
+                Random rd = new Random();
+                int rdResult = rd.Next(0, 100);
+                if(rdResult < BoomPercent) {
+                    //沼气爆炸
+                    result = 2;
+                    double temp = TotalWeight * 0.1;
+                    var Collection = SingleInstanceHelper.Instance.DBHelper.DataBase.GetCollection<BsonDocument>(SingleInstanceHelper.Instance.DBHelper.UserRecordCoName);
+                    FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(x => x["UserId"], UserId);
+                    List<BsonDocument> UserInDB = Collection.Find(filter).ToList();
+                    if (UserInDB != null && UserInDB.Count > 0) {
+                        var tempUserRecord = new UserRecordModel();
+                        tempUserRecord.FromBson(UserInDB[0]);
+                        tempUserRecord.UserGetWeight += temp;
+                        var TempBson = BsonSerializer.Deserialize<BsonDocument>(JsonHelper.getJsonByObject(tempUserRecord));
+                        SingleInstanceHelper.Instance.DBHelper.Save(SingleInstanceHelper.Instance.DBHelper.UserRecordCoName, TempBson, "UserId");
+                        //记录流水
+                        UserGetWeightWaterRecordHelper.WaterRecord(tempUserRecord.UserName, tempUserRecord.UserId, temp, "增加", "沼气爆炸");
+                    }
+                    TotalWeight = TotalWeight - temp;
+                }
+                //否则无事发生
+            }
+
+
+
+            if (LeftTime + 10 > 1800)
             {
-                LeftTime = 3600;
+                LeftTime = 1800;
             }
             else {
                 LeftTime += 10;
             }
+
+            LastRunnerLeftTime = LeftTime;
             TotalWeight += Power / 10000 * 0.5;
             CurrentRunner = RunnerName;
             CurrentRunnerPower = Power;
             TotalPower += Power;
             CurrentRunnerId = UserId;
+
             if (addFollow == 0)
             {
                 IsFan = false;
@@ -276,7 +388,7 @@ namespace SuperMarsh.Model {
             else {
                 IsFan = true;
             }
-            return true;
+            return result;
         }
 
         //生成下一轮沼泽
@@ -288,11 +400,13 @@ namespace SuperMarsh.Model {
                 result.CurrentRunner = "无";
                 result.CurrentRunnerPower = 0.0;
                 result.StartTime = TimeHelper.CurrentUnixTime();
-                result.LeftTime = 3600;
+                result.LeftTime = 1800;
                 result.TotalPower = 0.0;
                 result.TotalWeight = TotalWeight - WinnerWeight + 10;
                 result.WinnerWeight = 0.0;
                 result.Winner = "无";
+                result.RunTimes = 0;
+                result.LastRunnerLeftTime = 1800;
                 return result;
             }
             else {
